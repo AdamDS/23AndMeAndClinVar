@@ -36,18 +36,15 @@ while ( my $line = $IN1->getline ) {
 }
 $IN1->close();
 
-$OUT->print( "RefStatus\tAltStatus\trsID\tChromosome\tPosition\tAllele1\tAllele2\t".$IN2->getline."\n" );
+$OUT->print( "RefStatus\tAltStatus\trsID\tChromosome\tPosition\tAllele1\tAllele2\t".$IN2->getline );
 while ( my $line = $IN2->getline ) {
 	chomp( $line );
-	my ( $chr , $pos , $ref , $alt ) = split( "\t" , $line );
-	if ( $line =~ /Pathogenic/ig and $line =~ /Benign/ig ) {
-		$status = "C";
-	}
+	my ( $chr , $pos , $ref , $alt ) = ( split( "\t" , $line ) )[0,1,2,3];
 	my $gen = join( ":" , ( $chr , $pos ) );
 	if ( exists $snps{$gen} ) {
 		my ( $refCount , $altCount , $rstatus , $astatus ) = (0)x4;
 		my ( $allele1 , $allele2 ) = split( ":" , $snps{$gen} );
-		$rstatus = "missing";
+		$rstatus = "absent";
 		if ( scalar split( // , $ref ) == 1 ) {
 			if ( $allele1 eq $ref ) {
 				$refCount += 1;
@@ -61,7 +58,7 @@ while ( my $line = $IN2->getline ) {
 				$rstatus = "heterozygous";
 			}
 		}
-		$astatus = "missing";
+		$astatus = "absent";
 		if ( scalar split( // , $alt ) == 1 ) {
 			if ( $allele1 eq $alt ) {
 				$altCount += 1;
