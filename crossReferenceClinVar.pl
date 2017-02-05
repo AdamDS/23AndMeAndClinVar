@@ -36,16 +36,27 @@ while ( my $line = $IN1->getline ) {
 }
 $IN1->close();
 
+sub removeLead {
+	my $str = shift;
+	my @str = split // , $str;
+	shift @str;
+	return join( "" , @str );
+}
+
 $OUT->print( "RefStatus\tAltStatus\trsID\tChromosome\tPosition\tAllele1\tAllele2\t".$IN2->getline );
 while ( my $line = $IN2->getline ) {
 	chomp( $line );
-	my ( $chr , $pos , $ref , $alt ) = ( split( "\t" , $line ) )[0,1,2,3];
+	my ( $chr , $pos , $ref , $alt , $sig ) = ( split( "\t" , $line ) )[0,1,2,3,12];
+	if ( length $ref > 1 and length $alt == 1 ) {
+		$ref = &removeLead( $ref );
+		$alt = &removeLead( $alt );
+	}
 	my $gen = join( ":" , ( $chr , $pos ) );
 	if ( exists $snps{$gen} ) {
 		my ( $refCount , $altCount , $rstatus , $astatus ) = (0)x4;
 		my ( $allele1 , $allele2 ) = split( ":" , $snps{$gen} );
 		$rstatus = "absent";
-		if ( scalar split( // , $ref ) == 1 ) {
+		if ( length $ref == 1 ) {
 			if ( $allele1 eq $ref ) {
 				$refCount += 1;
 			} 
@@ -59,7 +70,7 @@ while ( my $line = $IN2->getline ) {
 			}
 		}
 		$astatus = "absent";
-		if ( scalar split( // , $alt ) == 1 ) {
+		if ( length $alt == 1 ) {
 			if ( $allele1 eq $alt ) {
 				$altCount += 1;
 			} 
@@ -68,8 +79,14 @@ while ( my $line = $IN2->getline ) {
 			}
 			if ( $altCount == 2 ) {
 				$astatus = "homozygous";
+				if ( $sig =~ /pathogenic/ig and $sig !~ /benign/ig ) {
+					print STDERR join( "\t" , ( $rstatus , $astatus , $rsIDs{$gen} , $chr , $pos , $allele1 , $allele2 , $line ) )."\n";
+				}
 			} elsif ( $altCount == 1 ) {
 				$astatus = "heterozygous";
+				if ( $sig =~ /pathogenic/ig and $sig !~ /benign/ig ) {
+					print STDOUT join( "\t" , ( $rstatus , $astatus , $rsIDs{$gen} , $chr , $pos , $allele1 , $allele2 , $line ) )."\n";
+				}
 			}
 		}
 		$OUT->print( join( "\t" , ( $rstatus , $astatus , $rsIDs{$gen} , $chr , $pos , $allele1 , $allele2 , $line ) )."\n" );
