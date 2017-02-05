@@ -7,11 +7,11 @@ use warnings;
 use IO::File;
 use FileHandle;
 
-my $usage = 'perl crossReferenceClinVar.pl <genome> <clinvar> <output> 
+my $usage = 'perl crossReferenceClinVar.pl <genome> <clinvar> <gender> <output> 
 ';
 
-die $usage , unless @ARGV == 3;
-my ( $genome , $clinvar , $output ) = @ARGV;
+die $usage , unless @ARGV == 4;
+my ( $genome , $clinvar , $gender , $output ) = @ARGV;
 
 my $IN1 = FileHandle->new( "$genome" , "r" );
 if ( not defined $IN1 ) { die "ADSERROR: Could not open/read $genome\n"; }
@@ -29,7 +29,12 @@ while ( my $line = $IN1->getline ) {
 	chomp( $line );
 	my ( $rsID , $chr , $pos , $genotype ) = split( "\t" , $line );
 	my ( $allele1 , $allele2 ) = split // , $genotype;
-	if ( not defined $allele2 ) { $allele2 = "."; }
+	if ( $chr eq "MT" ) { $allele2 = "."; }
+	if ( $gender eq "m" ) {
+		if ( $chr eq "X" or $chr eq "Y" ) {
+			$allele2 = ".";
+		}
+	}
 	my $gen = join( ":" , ( $chr , $pos ) );
  	$snps{$gen} = $allele1.":".$allele2;
 	$rsIDs{$gen} = $rsID;
