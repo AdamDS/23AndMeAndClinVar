@@ -48,7 +48,10 @@ sub removeLead {
 	return join( "" , @str );
 }
 
-$OUT->print( "RefStatus\tAltStatus\trsID\tChromosome\tPosition\tAllele1\tAllele2\t".$IN2->getline );
+my $header = "RefStatus\tAltStatus\trsID\tChromosome\tPosition\tAllele1\tAllele2\t".$IN2->getline;
+$OUT->print( $header );
+print STDOUT $header;
+print STDERR $header;
 while ( my $line = $IN2->getline ) {
 	chomp( $line );
 	my ( $chr , $pos , $ref , $alt , $sig ) = ( split( "\t" , $line ) )[0,1,2,3,12];
